@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import App from './App'
 
@@ -10,11 +10,11 @@ describe('App', () => {
       screen.getByRole('heading', { level: 1, name: 'Korter í kosningar' }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Fylgisrennur flokka' }),
+      screen.getByRole('heading', { level: 2, name: 'Fylgi flokkanna' }),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('table', {
-        name: 'Næst á lista hjá hverjum flokki',
+        name: 'Röð næst inn',
       }),
     ).toBeInTheDocument()
   })
@@ -38,19 +38,24 @@ describe('App', () => {
     expect(pirateSeats).toHaveTextContent('0 sæti')
   })
 
-  it('keeps zero-seat parties visible in the per-party next-in table', () => {
+  it('shows direct percentage fields when Reitir is checked', () => {
     render(<App />)
 
-    const nextInTable = screen.getByRole('table', {
-      name: 'Næst á lista hjá hverjum flokki',
-    })
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Reitir' }))
 
-    expect(within(nextInTable).getByText('F - Flokkur fólksins')).toBeInTheDocument()
-    expect(within(nextInTable).getByText('FF númer 1')).toBeInTheDocument()
-    expect(within(nextInTable).getByText('O - Okkar borg')).toBeInTheDocument()
     expect(
-      within(nextInTable).getByText('Sigfús Aðalsteinsson, leikskólakennari'),
+      screen.getByRole('spinbutton', { name: 'P - Píratar prósentur' }),
     ).toBeInTheDocument()
+  })
+
+  it('keeps zero-seat parties visible on the candidate-lists page', () => {
+    window.location.hash = '#listar'
+    render(<App />)
+
+    expect(screen.getByText('F - Flokkur fólksins')).toBeInTheDocument()
+    expect(screen.getByText('O - Okkar borg')).toBeInTheDocument()
+    expect(screen.getByText('Sigfús Aðalsteinsson')).toBeInTheDocument()
+    expect(screen.getAllByText('leikskólakennari').length).toBeGreaterThan(0)
   })
 
   it('shows all candidate lists on a separate page and highlights the next person with needed share', () => {
@@ -71,7 +76,7 @@ describe('App', () => {
     expect(screen.getByText('Magnea Gná Jóhannsdóttir')).toBeInTheDocument()
     expect(screen.getAllByText('borgarfulltrúi').length).toBeGreaterThan(0)
     expect(screen.getByText('Vantar 2,97%')).toBeInTheDocument()
-    expect(screen.getByText('Kristinn Jón Ólafsson')).toBeInTheDocument()
+    expect(screen.getAllByText('Kristinn Jón Ólafsson').length).toBeGreaterThan(0)
     expect(screen.getAllByText('varaborgarfulltrúi').length).toBeGreaterThan(0)
   })
 })

@@ -41,6 +41,10 @@ function formatShare(share: number, digits: 'slider' | 'table' = 'slider') {
   return `${formatter.format(share * 100)}%`
 }
 
+function formatShareInputValue(share: number) {
+  return sliderFormatter.format(share * 100)
+}
+
 function formatSeats(count: number) {
   return `${count} sæti`
 }
@@ -81,10 +85,31 @@ function splitCandidateLabel(candidateName: string) {
   }
 }
 
+function renderCandidateLabel(candidateName: string, roleClassName: string) {
+  const candidateLabel = splitCandidateLabel(candidateName)
+
+  return (
+    <>
+      <strong>{candidateLabel.name}</strong>
+      {candidateLabel.role ? (
+        <span className={roleClassName}>{candidateLabel.role}</span>
+      ) : null}
+    </>
+  )
+}
+
 function App() {
   const [page, setPage] = useState<AppPage>(() => getPageFromHash())
   const [voteShares, setVoteShares] =
     useState<Record<string, number>>(defaultVoteShares)
+  const [showShareFields, setShowShareFields] = useState(false)
+  const [shareInputs, setShareInputs] =
+    useState<Record<string, string>>(() =>
+      municipality.parties.reduce<Record<string, string>>((accumulator, party) => {
+        accumulator[party.id] = formatShareInputValue(defaultVoteShares[party.id] ?? 0)
+        return accumulator
+      }, {}),
+    )
 
   useEffect(() => {
     document.title = 'Korter í kosningar'
@@ -101,11 +126,22 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    setShareInputs(
+      municipality.parties.reduce<Record<string, string>>((accumulator, party) => {
+        accumulator[party.id] = formatShareInputValue(voteShares[party.id] ?? 0)
+        return accumulator
+      }, {}),
+    )
+  }, [voteShares])
+
   const election = calculateElection(municipality, voteShares)
   const leadingParty = municipality.parties.reduce((leader, party) =>
     voteShares[party.id] > voteShares[leader.id] ? party : leader,
   )
   const nextSeat = election.nextInQueue[0]
+  const nextSeatLabel =
+    nextSeat == null ? null : splitCandidateLabel(nextSeat.candidateName)
 
   const navigateTo = (nextPage: AppPage) => {
     setPage(nextPage)
@@ -120,6 +156,27 @@ function App() {
 
   const handleSliderChange = (partyId: string, nextValue: string) => {
     const nextShare = Number(nextValue) / 1000
+
+    startTransition(() => {
+      setVoteShares((current) =>
+        normalizeVoteShares(municipality, current, partyId, nextShare),
+      )
+    })
+  }
+
+  const handleShareInputChange = (partyId: string, nextValue: string) => {
+    setShareInputs((current) => ({
+      ...current,
+      [partyId]: nextValue,
+    }))
+
+    const normalizedValue = Number(nextValue.replace(',', '.'))
+
+    if (!Number.isFinite(normalizedValue)) {
+      return
+    }
+
+    const nextShare = normalizedValue / 100
 
     startTransition(() => {
       setVoteShares((current) =>
@@ -177,7 +234,7 @@ function App() {
           <span className="metric-card__hint">Borgarfulltrúar í Reykjavík</span>
         </article>
         <article className="metric-card">
-          <span className="metric-card__label">Leiðandi flokkur</span>
+          <span className="metric-card__label">Stærsti flokkur</span>
           <strong className="metric-card__value">{leadingParty.code}</strong>
           <span className="metric-card__hint">{leadingParty.name}</span>
         </article>
@@ -193,8 +250,15 @@ function App() {
         <article className="metric-card">
           <span className="metric-card__label">Næst inn</span>
           <strong className="metric-card__value">{nextSeat?.partyCode ?? '—'}</strong>
-          <span className="metric-card__hint">
-            {nextSeat?.candidateName ?? 'Enginn á lista'}
+          <span className="metric-card__hint metric-card__hint--stacked">
+            {nextSeatLabel == null ? (
+              'Enginn á lista'
+            ) : (
+              <>
+                <strong>{nextSeatLabel.name}</strong>
+                {nextSeatLabel.role ? <span>{nextSeatLabel.role}</span> : null}
+              </>
+            )}
           </span>
         </article>
       </section>
@@ -205,11 +269,16 @@ function App() {
             <div className="section-heading">
               <div>
                 <p className="section-heading__eyebrow">Fylgi</p>
-                <h2>Fylgisrennur flokka</h2>
+                <h2>Fylgi flokkanna</h2>
               </div>
-              <div className="total-pill" aria-live="polite">
-                Samtals {formatShare(election.totalShare)}
-              </div>
+              <label className="toggle-pill">
+                <input
+                  checked={showShareFields}
+                  type="checkbox"
+                  onChange={(event) => setShowShareFields(event.currentTarget.checked)}
+                />
+                <span>Reitir</span>
+              </label>
             </div>
 
             <div className="party-grid">
@@ -218,6 +287,10 @@ function App() {
                 const nextInParty =
                   election.partyNextIn.find((row) => row.partyId === party.id) ??
                   null
+                const nextCandidateLabel =
+                  nextInParty?.nextCandidateName == null
+                    ? null
+                    : splitCandidateLabel(nextInParty.nextCandidateName)
                 const style = { '--party-accent': party.color } as CSSProperties
 
                 return (
@@ -238,6 +311,30 @@ function App() {
                         {formatSeats(seatCount)}
                       </span>
                     </div>
+
+                    {showShareFields ? (
+                      <label className="party-card__field">
+                        <span className="party-card__footer-label">Fylgi í %</span>
+                        <div className="party-card__field-input">
+                          <input
+                            inputMode="decimal"
+                            max="100"
+                            min="0"
+                            step="0.1"
+                            type="number"
+                            value={shareInputs[party.id] ?? ''}
+                            onChange={(event) =>
+                              handleShareInputChange(
+                                party.id,
+                                event.currentTarget.value,
+                              )
+                            }
+                            aria-label={`${party.fullName} prósentur`}
+                          />
+                          <span>%</span>
+                        </div>
+                      </label>
+                    ) : null}
 
                     <label className="sr-only" htmlFor={`slider-${party.id}`}>
                       {party.fullName}
@@ -262,20 +359,31 @@ function App() {
                     </div>
 
                     <div className="party-card__footer">
-                      <span>
-                        Næst á lista:{' '}
-                        <strong>
-                          {nextInParty?.nextCandidateName ?? 'Enginn á lista'}
-                        </strong>
-                      </span>
-                      <span>
-                        Vantar:{' '}
+                      <div className="party-card__next">
+                        <span className="party-card__footer-label">Næst á lista</span>
+                        <div className="party-card__candidate">
+                          {nextCandidateLabel == null ? (
+                            <strong>Enginn á lista</strong>
+                          ) : (
+                            <>
+                              <strong>{nextCandidateLabel.name}</strong>
+                              {nextCandidateLabel.role ? (
+                                <span className="party-card__candidate-role">
+                                  {nextCandidateLabel.role}
+                                </span>
+                              ) : null}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="party-card__need">
+                        <span className="party-card__footer-label">Vantar</span>
                         <strong>
                           {nextInParty?.neededShare == null
                             ? '—'
                             : formatShare(nextInParty.neededShare, 'table')}
                         </strong>
-                      </span>
+                      </div>
                     </div>
                   </article>
                 )
@@ -286,8 +394,8 @@ function App() {
           <section className="panel panel--embed">
             <div className="section-heading">
               <div>
-                <p className="section-heading__eyebrow">Hlé</p>
-                <h2>Spotify</h2>
+                <p className="section-heading__eyebrow">Hlaðvarp</p>
+                <h2>Korter í kosningar á Spotify</h2>
               </div>
             </div>
 
@@ -301,7 +409,7 @@ function App() {
               allowFullScreen
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
-              title="Spotify embed"
+              title="Korter í kosningar á Spotify"
             />
           </section>
 
@@ -343,7 +451,7 @@ function App() {
             </ol>
           </section>
 
-          <section className="panel panel--two-up">
+          <section className="panel">
             <div className="table-panel">
               <div className="section-heading">
                 <div>
@@ -382,85 +490,15 @@ function App() {
                             {seat.partyCode}
                           </span>
                         </td>
-                        <td>{seat.candidateName}</td>
+                        <td>
+                          <div className="table-candidate">
+                            {renderCandidateLabel(seat.candidateName, 'table-candidate__role')}
+                          </div>
+                        </td>
                         <td>
                           {seat.neededShare === null
                             ? '—'
                             : formatShare(seat.neededShare, 'table')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="table-panel">
-              <div className="table-shell">
-                <table aria-label="Næst á lista hjá hverjum flokki">
-                  <thead>
-                    <tr>
-                      <th>Flokkur</th>
-                      <th>Sæti núna</th>
-                      <th>Næsti á lista</th>
-                      <th>Deilitala</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {election.partyNextIn.map((row) => (
-                      <tr key={row.partyId}>
-                        <td>
-                          <span
-                            className="table-party"
-                            style={
-                              {
-                                '--party-accent': row.partyColor,
-                              } as CSSProperties
-                            }
-                          >
-                            {row.partyCode}
-                          </span>{' '}
-                          {row.partyName}
-                        </td>
-                        <td>{row.currentSeats}</td>
-                        <td>{row.nextCandidateName ?? 'Enginn á lista'}</td>
-                        <td>{row.nextDivisor ?? '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="table-shell">
-                <table aria-label="Vantar í næsta sæti hjá hverjum flokki">
-                  <thead>
-                    <tr>
-                      <th>Flokkur</th>
-                      <th>Næsti á lista</th>
-                      <th>Vantar</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {election.partyNextIn.map((row) => (
-                      <tr key={`${row.partyId}-needed`}>
-                        <td>
-                          <span
-                            className="table-party"
-                            style={
-                              {
-                                '--party-accent': row.partyColor,
-                              } as CSSProperties
-                            }
-                          >
-                            {row.partyCode}
-                          </span>{' '}
-                          {row.partyName}
-                        </td>
-                        <td>{row.nextCandidateName ?? 'Enginn á lista'}</td>
-                        <td>
-                          {row.neededShare === null
-                            ? '—'
-                            : formatShare(row.neededShare, 'table')}
                         </td>
                       </tr>
                     ))}

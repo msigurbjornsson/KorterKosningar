@@ -168,6 +168,16 @@
   color: var(--ink-strong);
 }
 
+.metric-card__hint--stacked {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.metric-card__hint--stacked strong {
+  color: var(--ink-strong);
+  font-size: 0.98rem;
+}
+
 .panel {
   padding: 1.2rem;
   display: grid;
@@ -188,17 +198,25 @@
   color: var(--ink-strong);
 }
 
-.total-pill,
 .section-heading__meta {
   font-size: 0.95rem;
   font-weight: 700;
 }
 
-.total-pill {
-  border-radius: 999px;
-  padding: 0.6rem 0.85rem;
-  background: rgba(15, 118, 110, 0.09);
-  color: var(--accent-strong);
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.toggle-pill input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent-strong);
 }
 
 .party-grid {
@@ -257,6 +275,38 @@
   accent-color: var(--party-accent);
 }
 
+.party-card__field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.party-card__field-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  padding: 0.55rem 0.7rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--party-accent) 24%, white);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.party-card__field-input input {
+  width: 4.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink-strong);
+  font: inherit;
+  font-weight: 700;
+  padding: 0;
+  outline: none;
+}
+
+.party-card__field-input span {
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
 .party-card__scale {
   display: flex;
   justify-content: space-between;
@@ -266,16 +316,45 @@
 
 .party-card__footer {
   align-items: flex-start;
+  grid-template-columns: minmax(0, 1fr) auto;
   font-size: 0.92rem;
   line-height: 1.45;
 }
 
-.party-card__footer span {
-  flex: 1;
+.party-card__next,
+.party-card__need {
+  display: grid;
+  gap: 0.12rem;
 }
 
-.party-card__footer strong {
+.party-card__next {
+  min-width: 0;
+}
+
+.party-card__footer-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.party-card__candidate {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.party-card__footer strong,
+.party-card__candidate strong {
   color: var(--ink-strong);
+}
+
+.party-card__candidate-role {
+  color: var(--ink-soft);
+}
+
+.party-card__need {
+  justify-items: end;
 }
 
 .seat-grid {
@@ -559,6 +638,20 @@
   background: rgba(15, 118, 110, 0.04);
 }
 
+.table-candidate {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.table-candidate strong {
+  color: var(--ink-strong);
+}
+
+.table-candidate__role {
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -622,9 +715,17 @@
   }
 
   .section-heading,
-  .party-card__footer,
   .candidate-list-card__header {
     display: grid;
+  }
+
+  .party-card__footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .party-card__need {
+    justify-items: start;
   }
 
   .table-shell table {
