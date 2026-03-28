@@ -45,12 +45,39 @@ function formatSeats(count: number) {
   return `${count} sæti`
 }
 
+function isRoleStartToken(token: string) {
+  if (token.length === 0) {
+    return false
+  }
+
+  return token[0] === token[0].toLowerCase()
+}
+
 function splitCandidateLabel(candidateName: string) {
-  const [name, ...rest] = candidateName.split(',')
+  const [commaName, ...commaRest] = candidateName.split(',')
+
+  if (commaRest.length > 0) {
+    return {
+      name: commaName.trim(),
+      role: commaRest.join(',').trim() || null,
+    }
+  }
+
+  const tokens = candidateName.trim().split(/\s+/)
+  const roleIndex = tokens.findIndex(
+    (token, index) => index >= 2 && isRoleStartToken(token),
+  )
+
+  if (roleIndex > 0) {
+    return {
+      name: tokens.slice(0, roleIndex).join(' ').trim(),
+      role: tokens.slice(roleIndex).join(' ').trim() || null,
+    }
+  }
 
   return {
-    name: name.trim(),
-    role: rest.join(',').trim() || null,
+    name: candidateName.trim(),
+    role: null,
   }
 }
 

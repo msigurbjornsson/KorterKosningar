@@ -13,8 +13,7 @@ describe('App', () => {
       screen.getByRole('heading', { level: 2, name: 'Fylgisrennur flokka' }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', {
-        level: 2,
+      screen.getByRole('table', {
         name: 'Næst á lista hjá hverjum flokki',
       }),
     ).toBeInTheDocument()
@@ -69,8 +68,10 @@ describe('App', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getByText('B - Framsóknarflokkurinn')).toBeInTheDocument()
-    expect(screen.getByText('Magnea Gná Jóhannsdóttir, borgarfulltrúi')).toBeInTheDocument()
+    expect(screen.getByText('Magnea Gná Jóhannsdóttir')).toBeInTheDocument()
+    expect(screen.getAllByText('borgarfulltrúi').length).toBeGreaterThan(0)
     expect(screen.getByText('Vantar 2,97%')).toBeInTheDocument()
-    expect(screen.getByText('FF númer 1')).toBeInTheDocument()
+    expect(screen.getByText('Kristinn Jón Ólafsson')).toBeInTheDocument()
+    expect(screen.getAllByText('varaborgarfulltrúi').length).toBeGreaterThan(0)
   })
 })
