@@ -17,6 +17,9 @@ describe('App', () => {
         name: 'Röð næst inn',
       }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reykjavík' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Kópavogur' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Garðabær' })).toBeDisabled()
   })
 
   it('recalculates seats when a slider changes and resets to the workbook baseline', () => {

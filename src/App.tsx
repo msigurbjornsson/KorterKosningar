@@ -24,6 +24,14 @@ const tableFormatter = new Intl.NumberFormat('is-IS', {
 
 const municipality = reykjavikMunicipality
 const defaultVoteShares = buildDefaultVoteShares(municipality)
+const municipalityOptions = [
+  { id: 'reykjavik', label: 'Reykjavík', enabled: true },
+  { id: 'kopavogur', label: 'Kópavogur', enabled: false },
+  { id: 'gardabaer', label: 'Garðabær', enabled: false },
+  { id: 'hafnarfjordur', label: 'Hafnarfjörður', enabled: false },
+  { id: 'mosfellsbaer', label: 'Mosfellsbær', enabled: false },
+  { id: 'seltjarnarnes', label: 'Seltjarnarnes', enabled: false },
+] as const
 const pageHashToView = {
   '#listar': 'lists',
   '#likan': 'model',
@@ -140,9 +148,6 @@ function App() {
   const leadingParty = municipality.parties.reduce((leader, party) =>
     voteShares[party.id] > voteShares[leader.id] ? party : leader,
   )
-  const nextSeat = election.nextInQueue[0]
-  const nextSeatLabel =
-    nextSeat == null ? null : splitCandidateLabel(nextSeat.candidateName)
   const sortedParties = [...municipality.parties].sort((left, right) => {
     if (!sortPartiesBySize) {
       return municipality.partyOrder.indexOf(left.id) - municipality.partyOrder.indexOf(right.id)
@@ -223,6 +228,22 @@ function App() {
             borgarstjórn Reykjavíkur, hver er næst inn og hversu mikið fylgi
             vantar til að ná næsta sæti.
           </p>
+          <div className="municipality-strip">
+            <span className="municipality-strip__label">Sveitarfélög</span>
+            <div className="municipality-strip__list" aria-label="Sveitarfélög">
+              {municipalityOptions.map((option) => (
+                <button
+                  key={option.id}
+                  className={`municipality-chip${option.enabled ? ' is-active' : ''}`}
+                  type="button"
+                  disabled={!option.enabled}
+                  aria-disabled={!option.enabled}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="hero-panel__actions">
@@ -274,20 +295,6 @@ function App() {
           </strong>
           <span className="metric-card__hint">
             Fylgi sem þarf til að ná síðasta sætinu
-          </span>
-        </article>
-        <article className="metric-card">
-          <span className="metric-card__label">Næst inn</span>
-          <strong className="metric-card__value">{nextSeat?.partyCode ?? '—'}</strong>
-          <span className="metric-card__hint metric-card__hint--stacked">
-            {nextSeatLabel == null ? (
-              'Enginn á lista'
-            ) : (
-              <>
-                <strong>{nextSeatLabel.name}</strong>
-                {nextSeatLabel.role ? <span>{nextSeatLabel.role}</span> : null}
-              </>
-            )}
           </span>
         </article>
       </section>
