@@ -17,16 +17,16 @@ describe('App', () => {
         name: 'Röð næst inn',
       }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reykjavík' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Kópavogur' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Garðabær' })).toBeDisabled()
+    expect(
+      screen.getByText('Sveitarstjórnarkosningar í Reykjavík'),
+    ).toBeInTheDocument()
   })
 
   it('recalculates seats when a slider changes and resets to the workbook baseline', () => {
     render(<App />)
 
     const pirateSeats = screen.getByTestId('party-seat-count-p')
-    const pirateSlider = screen.getByRole('slider', { name: 'P - Píratar' })
+    const pirateSlider = screen.getByRole('slider', { name: 'Píratar' })
 
     expect(pirateSeats).toHaveTextContent('0 sæti')
 
@@ -47,7 +47,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Reitir' }))
 
     expect(
-      screen.getByRole('spinbutton', { name: 'P - Píratar prósentur' }),
+      screen.getByRole('spinbutton', { name: 'Píratar prósentur' }),
     ).toBeInTheDocument()
   })
 
@@ -70,8 +70,8 @@ describe('App', () => {
     window.location.hash = '#listar'
     render(<App />)
 
-    expect(screen.getByText('F - Flokkur fólksins')).toBeInTheDocument()
-    expect(screen.getByText('O - Okkar borg')).toBeInTheDocument()
+    expect(screen.getByText('Flokkur fólksins')).toBeInTheDocument()
+    expect(screen.getByText('Okkar borg')).toBeInTheDocument()
     expect(screen.getByText('Sigfús Aðalsteinsson')).toBeInTheDocument()
     expect(screen.getAllByText('leikskólakennari').length).toBeGreaterThan(0)
   })
@@ -90,7 +90,7 @@ describe('App', () => {
         name: 'Allir frambjóðendur eftir flokki',
       }),
     ).toBeInTheDocument()
-    expect(screen.getByText('B - Framsóknarflokkurinn')).toBeInTheDocument()
+    expect(screen.getByText('Framsóknarflokkurinn')).toBeInTheDocument()
     expect(screen.getByText('Magnea Gná Jóhannsdóttir')).toBeInTheDocument()
     expect(screen.getAllByText('borgarfulltrúi').length).toBeGreaterThan(0)
     expect(screen.getByText('Vantar 2,97%')).toBeInTheDocument()

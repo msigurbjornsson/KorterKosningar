@@ -391,6 +391,9 @@ export const reykjavikMunicipality: MunicipalityConfig = {
   id: 'reykjavik',
   name: 'Reykjavík',
   seatCount: 23,
+  population: 139804,
+  populationAsOf: '1. janúar 2026',
+  isEnabled: true,
   partyOrder: parties.map((party) => party.id),
   sliderGroups: [
     ['d', 'c', 'm', 'f', 'b'],
@@ -399,4 +402,56 @@ export const reykjavikMunicipality: MunicipalityConfig = {
   parties,
 }
 
-export const municipalities: MunicipalityConfig[] = [reykjavikMunicipality]
+export const municipalities: MunicipalityConfig[] = [
+  reykjavikMunicipality,
+  {
+    id: 'kopavogur',
+    name: 'Kópavogur',
+    seatCount: 0,
+    population: 40286,
+    populationAsOf: '1. janúar 2026',
+    isEnabled: false,
+    partyOrder: [],
+    parties: [],
+  },
+  {
+    id: 'gardabaer',
+    name: 'Garðabær',
+    seatCount: 0,
+    population: 20724,
+    populationAsOf: '1. janúar 2026',
+    isEnabled: false,
+    partyOrder: [],
+    parties: [],
+  },
+  {
+    id: 'hafnarfjordur',
+    name: 'Hafnarfjörður',
+    seatCount: 0,
+    population: 32398,
+    populationAsOf: '1. janúar 2026',
+    isEnabled: false,
+    partyOrder: [],
+    parties: [],
+  },
+  {
+    id: 'mosfellsbaer',
+    name: 'Mosfellsbær',
+    seatCount: 0,
+    population: 13772,
+    populationAsOf: '1. janúar 2026',
+    isEnabled: false,
+    partyOrder: [],
+    parties: [],
+  },
+  {
+    id: 'seltjarnarnes',
+    name: 'Seltjarnarnes',
+    seatCount: 0,
+    population: 4609,
+    populationAsOf: '1. janúar 2026',
+    isEnabled: false,
+    partyOrder: [],
+    parties: [],
+  },
+]

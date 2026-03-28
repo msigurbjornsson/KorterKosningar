@@ -22,16 +22,10 @@ const tableFormatter = new Intl.NumberFormat('is-IS', {
   maximumFractionDigits: 2,
 })
 
+const populationFormatter = new Intl.NumberFormat('is-IS')
+
 const municipality = reykjavikMunicipality
 const defaultVoteShares = buildDefaultVoteShares(municipality)
-const municipalityOptions = [
-  { id: 'reykjavik', label: 'Reykjavík', enabled: true },
-  { id: 'kopavogur', label: 'Kópavogur', enabled: false },
-  { id: 'gardabaer', label: 'Garðabær', enabled: false },
-  { id: 'hafnarfjordur', label: 'Hafnarfjörður', enabled: false },
-  { id: 'mosfellsbaer', label: 'Mosfellsbær', enabled: false },
-  { id: 'seltjarnarnes', label: 'Seltjarnarnes', enabled: false },
-] as const
 const pageHashToView = {
   '#listar': 'lists',
   '#likan': 'model',
@@ -55,6 +49,10 @@ function formatShareInputValue(share: number) {
 
 function formatSeats(count: number) {
   return `${count} sæti`
+}
+
+function formatPopulation(population: number) {
+  return populationFormatter.format(population)
 }
 
 function isRoleStartToken(token: string) {
@@ -228,22 +226,6 @@ function App() {
             borgarstjórn Reykjavíkur, hver er næst inn og hversu mikið fylgi
             vantar til að ná næsta sæti.
           </p>
-          <div className="municipality-strip">
-            <span className="municipality-strip__label">Sveitarfélög</span>
-            <div className="municipality-strip__list" aria-label="Sveitarfélög">
-              {municipalityOptions.map((option) => (
-                <button
-                  key={option.id}
-                  className={`municipality-chip${option.enabled ? ' is-active' : ''}`}
-                  type="button"
-                  disabled={!option.enabled}
-                  aria-disabled={!option.enabled}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div className="hero-panel__actions">
@@ -263,17 +245,19 @@ function App() {
               Framboðslistar
             </button>
           </nav>
-          <label className="toggle-pill">
-            <input
-              checked={sortPartiesBySize}
-              type="checkbox"
-              onChange={(event) => setSortPartiesBySize(event.currentTarget.checked)}
-            />
-            <span>Raða eftir stærð</span>
-          </label>
-          <button className="ghost-button" type="button" onClick={handleReset}>
-            Endurstilla á grunnspá
-          </button>
+          <div className="hero-panel__controls">
+            <label className="toggle-pill toggle-pill--hero">
+              <input
+                checked={sortPartiesBySize}
+                type="checkbox"
+                onChange={(event) => setSortPartiesBySize(event.currentTarget.checked)}
+              />
+              <span>Raða eftir stærð</span>
+            </label>
+            <button className="ghost-button ghost-button--hero" type="button" onClick={handleReset}>
+              Endurstilla á grunnspá
+            </button>
+          </div>
         </div>
       </section>
 
@@ -287,6 +271,19 @@ function App() {
           <span className="metric-card__label">Stærsti flokkur</span>
           <strong className="metric-card__value">{leadingParty.code}</strong>
           <span className="metric-card__hint">{leadingParty.name}</span>
+        </article>
+        <article className="metric-card">
+          <span className="metric-card__label">Íbúafjöldi</span>
+          <strong className="metric-card__value">
+            {municipality.population == null
+              ? '—'
+              : formatPopulation(municipality.population)}
+          </strong>
+          <span className="metric-card__hint">
+            {municipality.populationAsOf == null
+              ? `Íbúar í ${municipality.name}`
+              : `Íbúar ${municipality.populationAsOf}`}
+          </span>
         </article>
         <article className="metric-card">
           <span className="metric-card__label">Viðmið 23. sætis</span>
@@ -338,7 +335,7 @@ function App() {
                   >
                     <div className="party-card__topline">
                       <span className="party-badge">{party.code}</span>
-                      <span className="party-card__name">{party.fullName}</span>
+                      <span className="party-card__name">{party.name}</span>
                     </div>
 
                     <div className="party-card__numbers">
@@ -365,7 +362,7 @@ function App() {
                                 event.currentTarget.value,
                               )
                             }
-                            aria-label={`${party.fullName} prósentur`}
+                            aria-label={`${party.name} prósentur`}
                           />
                           <span>%</span>
                         </div>
@@ -373,7 +370,7 @@ function App() {
                     ) : null}
 
                     <label className="sr-only" htmlFor={`slider-${party.id}`}>
-                      {party.fullName}
+                      {party.name}
                     </label>
                     <input
                       id={`slider-${party.id}`}
@@ -386,7 +383,7 @@ function App() {
                       onChange={(event) =>
                         handleSliderChange(party.id, event.currentTarget.value)
                       }
-                      aria-label={party.fullName}
+                      aria-label={party.name}
                     />
 
                     <div className="party-card__scale" aria-hidden="true">
@@ -573,7 +570,7 @@ function App() {
                     <div className="candidate-list-card__title">
                       <span className="party-badge">{party.code}</span>
                       <div className="candidate-list-card__details">
-                        <h3>{party.fullName}</h3>
+                        <h3>{party.name}</h3>
                         <p>
                           {formatSeats(seatsWon)} og {party.candidates.length} nöfn á
                           lista
