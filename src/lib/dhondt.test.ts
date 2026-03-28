@@ -14,14 +14,14 @@ const expectedElected = [
   'M - Miðflokkurinn|Ari Edwald lögmaður og rekstrarhagfræðingur',
   'C - Viðreisn|Björg Magnúsdóttir, fjölmiðlakona og handritshöfundur',
   'S - Samfylkingin|Heiða Björg Hilmisdóttir, borgarstjóri',
-  'V - Vor til vinstri|Sanna Magdalena Mörtudóttir, mannfræðingur og borgarfulltrúi',
+  'V - Vinstrið|Sanna Magdalena Mörtudóttir, mannfræðingur og borgarfulltrúi',
   'D - Sjálfstæðisflokkurinn|Brynjar Þór Níelsson, lögfræðingur og fv. alþingismaður',
   'S - Samfylkingin|Steinunn Gyðu- og Guðjónsdóttir, ráðgjafi og fyrrum talskona Stígamóta',
   'D - Sjálfstæðisflokkurinn|Ragnhildur Alda María Vilhjálmsdóttir, borgarfulltrúi',
   'M - Miðflokkurinn|Kristín Kolbrún Waage Kolbeinsdóttir kennari og uppeldisráðgjafi',
   'C - Viðreisn|Róbert Ragnarsson, stjórnsýsluráðgjafi',
   'S - Samfylkingin|Skúli Helgason, borgarfulltrúi',
-  'V - Vor til vinstri|Líf Magneudóttir, grunnskólakennari og borgarfulltrúi',
+  'V - Vinstrið|Líf Magneudóttir, grunnskólakennari og borgarfulltrúi',
   'D - Sjálfstæðisflokkurinn|Rúnar Freyr Gíslason, leikari',
   'D - Sjálfstæðisflokkurinn|Guðný María Jóhannsdóttir, viðskiptafræðingur',
   'S - Samfylkingin|Stein Olav Romslo, kennari',
@@ -30,7 +30,7 @@ const expectedElected = [
   'C - Viðreisn|Þorvaldur Davíð Kristjánsson, leikari',
   'D - Sjálfstæðisflokkurinn|Albert Guðmundsson, lögfræðingur, varaþingmaður og formaður Varðar',
   'S - Samfylkingin|Bjarnveig Birta Bjarnadóttir, rekstrarstjóri',
-  'V - Vor til vinstri|Stefán Pálsson, sagnfræðingur og varaborgarfulltrúi',
+  'V - Vinstrið|Stefán Pálsson, sagnfræðingur og varaborgarfulltrúi',
 ]
 
 describe('dhondt allocation', () => {
@@ -114,11 +114,48 @@ describe('vote normalization', () => {
 
     expect(rebalanced.p).toBeCloseTo(0.08, 12)
     expect(total).toBeCloseTo(1, 12)
-    expect(rebalanced.d).toBeLessThan(defaultShares.d)
     expect(rebalanced.s).toBeLessThan(defaultShares.s)
+    expect(rebalanced.v).toBeLessThan(defaultShares.v)
+    expect(rebalanced.d).toBeCloseTo(defaultShares.d, 12)
   })
 
-  it('falls back to an even redistribution when the remaining parties are all at zero', () => {
+  it('rebalances within the edited party slider groups before touching other parties', () => {
+    const defaultShares = buildDefaultVoteShares(reykjavikMunicipality)
+    const rebalanced = normalizeVoteShares(
+      reykjavikMunicipality,
+      defaultShares,
+      'd',
+      0.3,
+    )
+
+    expect(rebalanced.d).toBeCloseTo(0.3, 12)
+    expect(rebalanced.c).toBeLessThan(defaultShares.c)
+    expect(rebalanced.m).toBeLessThan(defaultShares.m)
+    expect(rebalanced.b).toBeLessThan(defaultShares.b)
+    expect(rebalanced.s).toBeCloseTo(defaultShares.s, 12)
+    expect(rebalanced.v).toBeCloseTo(defaultShares.v, 12)
+    expect(rebalanced.p).toBeCloseTo(defaultShares.p, 12)
+    expect(rebalanced.j).toBeCloseTo(defaultShares.j, 12)
+    expect(rebalanced.o).toBeCloseTo(defaultShares.o, 12)
+  })
+
+  it('uses the union of overlapping groups for parties that belong to both blocks', () => {
+    const defaultShares = buildDefaultVoteShares(reykjavikMunicipality)
+    const rebalanced = normalizeVoteShares(
+      reykjavikMunicipality,
+      defaultShares,
+      'c',
+      0.1,
+    )
+
+    expect(rebalanced.c).toBeCloseTo(0.1, 12)
+    expect(rebalanced.d).toBeGreaterThan(defaultShares.d)
+    expect(rebalanced.s).toBeGreaterThan(defaultShares.s)
+    expect(rebalanced.v).toBeGreaterThan(defaultShares.v)
+    expect(rebalanced.o).toBeCloseTo(defaultShares.o, 12)
+  })
+
+  it('falls back to an even redistribution inside the active slider group when its peers are all at zero', () => {
     const allInOneParty = reykjavikMunicipality.parties.reduce<Record<string, number>>(
       (accumulator, party) => {
         accumulator[party.id] = party.id === 'd' ? 1 : 0
@@ -134,16 +171,19 @@ describe('vote normalization', () => {
       0.5,
     )
 
-    const otherShares = Object.entries(redistributed)
-      .filter(([partyId]) => partyId !== 'd')
-      .map(([, share]) => share)
-
     expect(redistributed.d).toBeCloseTo(0.5, 12)
     expect(Object.values(redistributed).reduce((sum, share) => sum + share, 0)).toBeCloseTo(
       1,
       12,
     )
-    expect(Math.min(...otherShares)).toBeGreaterThanOrEqual(0.055)
-    expect(Math.max(...otherShares)).toBeLessThanOrEqual(0.056)
+    expect(redistributed.b).toBeCloseTo(0.125, 12)
+    expect(redistributed.c).toBeCloseTo(0.125, 12)
+    expect(redistributed.f).toBeCloseTo(0.125, 12)
+    expect(redistributed.m).toBeCloseTo(0.125, 12)
+    expect(redistributed.s).toBeCloseTo(0, 12)
+    expect(redistributed.v).toBeCloseTo(0, 12)
+    expect(redistributed.p).toBeCloseTo(0, 12)
+    expect(redistributed.j).toBeCloseTo(0, 12)
+    expect(redistributed.o).toBeCloseTo(0, 12)
   })
 })

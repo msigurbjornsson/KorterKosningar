@@ -74,6 +74,25 @@ function distributeUnits(
   }, {})
 }
 
+function sumUnits(ids: string[], unitsById: Record<string, number>) {
+  return ids.reduce((sum, id) => sum + (unitsById[id] ?? 0), 0)
+}
+
+function getSliderPeerIds(
+  municipality: MunicipalityConfig,
+  editedPartyId: string,
+) {
+  const partyOrder = municipality.partyOrder
+  const groupedPeers = new Set(
+    (municipality.sliderGroups ?? [])
+      .filter((group) => group.includes(editedPartyId))
+      .flat()
+      .filter((partyId) => partyId !== editedPartyId),
+  )
+
+  return partyOrder.filter((partyId) => groupedPeers.has(partyId))
+}
+
 export function buildDefaultVoteShares(
   municipality: MunicipalityConfig,
 ): Record<string, number> {
@@ -90,9 +109,6 @@ export function normalizeVoteShares(
   nextEditedShare: number,
 ) {
   const clampedEditedUnits = shareToUnits(clamp(nextEditedShare, 0, 1))
-  const remainingUnits = SLIDER_SCALE - clampedEditedUnits
-  const otherParties = municipality.parties.filter((party) => party.id !== editedPartyId)
-
   const currentUnits = municipality.parties.reduce<Record<string, number>>(
     (accumulator, party) => {
       accumulator[party.id] = shareToUnits(currentShares[party.id] ?? 0)
@@ -100,12 +116,45 @@ export function normalizeVoteShares(
     },
     {},
   )
-
-  const redistributedUnits = distributeUnits(
-    otherParties.map((party) => party.id),
-    currentUnits,
-    remainingUnits,
+  const currentEditedUnits = currentUnits[editedPartyId] ?? 0
+  const remainingUnits = SLIDER_SCALE - clampedEditedUnits
+  const otherPartyIds = municipality.parties
+    .map((party) => party.id)
+    .filter((partyId) => partyId !== editedPartyId)
+  const preferredPartyIds = getSliderPeerIds(municipality, editedPartyId)
+  const secondaryPartyIds = otherPartyIds.filter(
+    (partyId) => !preferredPartyIds.includes(partyId),
   )
+  const unitDelta = clampedEditedUnits - currentEditedUnits
+
+  let preferredTargetTotal = 0
+  let secondaryTargetTotal = 0
+
+  if (unitDelta <= 0) {
+    const receivingPartyIds =
+      preferredPartyIds.length > 0 ? preferredPartyIds : secondaryPartyIds
+    const fixedPartyIds =
+      receivingPartyIds === preferredPartyIds ? secondaryPartyIds : []
+    const fixedTotal = sumUnits(fixedPartyIds, currentUnits)
+
+    preferredTargetTotal =
+      receivingPartyIds === preferredPartyIds ? remainingUnits - fixedTotal : 0
+    secondaryTargetTotal =
+      receivingPartyIds === secondaryPartyIds ? remainingUnits : fixedTotal
+  } else {
+    const preferredCurrentTotal = sumUnits(preferredPartyIds, currentUnits)
+    const reductionFromPreferred = Math.min(unitDelta, preferredCurrentTotal)
+    const remainingReduction = unitDelta - reductionFromPreferred
+    const secondaryCurrentTotal = sumUnits(secondaryPartyIds, currentUnits)
+
+    preferredTargetTotal = preferredCurrentTotal - reductionFromPreferred
+    secondaryTargetTotal = secondaryCurrentTotal - remainingReduction
+  }
+
+  const redistributedUnits = {
+    ...distributeUnits(preferredPartyIds, currentUnits, preferredTargetTotal),
+    ...distributeUnits(secondaryPartyIds, currentUnits, secondaryTargetTotal),
+  }
 
   return municipality.parties.reduce<Record<string, number>>((accumulator, party) => {
     accumulator[party.id] =

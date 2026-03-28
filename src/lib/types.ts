@@ -13,6 +13,7 @@ export interface MunicipalityConfig {
   name: string
   seatCount: number
   partyOrder: string[]
+  sliderGroups?: string[][]
   parties: PartyConfig[]
 }
 

@@ -7,15 +7,15 @@ describe('App', () => {
     render(<App />)
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Reykjavík' }),
+      screen.getByRole('heading', { level: 1, name: 'Korter í kosningar' }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Renna fyrir hvern flokk' }),
+      screen.getByRole('heading', { level: 2, name: 'Fylgisrennur flokka' }),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('heading', {
         level: 2,
-        name: 'Næsti á lista hjá hverjum flokki',
+        name: 'Næst á lista hjá hverjum flokki',
       }),
     ).toBeInTheDocument()
   })
@@ -43,7 +43,7 @@ describe('App', () => {
     render(<App />)
 
     const nextInTable = screen.getByRole('table', {
-      name: 'Næsti á lista hjá hverjum flokki',
+      name: 'Næst á lista hjá hverjum flokki',
     })
 
     expect(within(nextInTable).getByText('F - Flokkur fólksins')).toBeInTheDocument()
@@ -52,5 +52,25 @@ describe('App', () => {
     expect(
       within(nextInTable).getByText('Sigfús Aðalsteinsson, leikskólakennari'),
     ).toBeInTheDocument()
+  })
+
+  it('shows all candidate lists on a separate page and highlights the next person with needed share', () => {
+    window.location.hash = ''
+    render(<App />)
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Framboðslistar' }),
+    )
+
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Allir frambjóðendur eftir flokki',
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('B - Framsóknarflokkurinn')).toBeInTheDocument()
+    expect(screen.getByText('Magnea Gná Jóhannsdóttir, borgarfulltrúi')).toBeInTheDocument()
+    expect(screen.getByText('Vantar 2,97%')).toBeInTheDocument()
+    expect(screen.getByText('FF númer 1')).toBeInTheDocument()
   })
 })

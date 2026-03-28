@@ -7,7 +7,7 @@ const parties: PartyConfig[] = [
     name: 'Framsóknarflokkurinn',
     fullName: 'B - Framsóknarflokkurinn',
     defaultVoteShare: 0.045,
-    color: '#f59e0b',
+    color: '#16a34a',
     candidates: [
       'Einar Þorsteinsson, borgarfulltrúi',
       'Magnea Gná Jóhannsdóttir, borgarfulltrúi',
@@ -175,7 +175,7 @@ const parties: PartyConfig[] = [
     name: 'Flokkur fólksins',
     fullName: 'F - Flokkur fólksins',
     defaultVoteShare: 0.024,
-    color: '#8b5cf6',
+    color: '#eab308',
     candidates: ['FF númer 1'],
   },
   {
@@ -226,7 +226,7 @@ const parties: PartyConfig[] = [
     name: 'Okkar borg',
     fullName: 'O - Okkar borg',
     defaultVoteShare: 0.005,
-    color: '#475569',
+    color: '#c084fc',
     candidates: [
       'Sigfús Aðalsteinsson, leikskólakennari',
       'Baldur Borgþórsson, ráðgjafi',
@@ -332,8 +332,8 @@ const parties: PartyConfig[] = [
   {
     id: 'v',
     code: 'V',
-    name: 'Vor til vinstri',
-    fullName: 'V - Vor til vinstri',
+    name: 'Vinstrið',
+    fullName: 'V - Vinstrið',
     defaultVoteShare: 0.112,
     color: '#16a34a',
     candidates: [
@@ -392,6 +392,10 @@ export const reykjavikMunicipality: MunicipalityConfig = {
   name: 'Reykjavík',
   seatCount: 23,
   partyOrder: parties.map((party) => party.id),
+  sliderGroups: [
+    ['d', 'c', 'm', 'f', 'b'],
+    ['s', 'v', 'c', 'p', 'j'],
+  ],
   parties,
 }
 
