@@ -103,6 +103,7 @@ function App() {
   const [voteShares, setVoteShares] =
     useState<Record<string, number>>(defaultVoteShares)
   const [showShareFields, setShowShareFields] = useState(false)
+  const [sortPartiesBySize, setSortPartiesBySize] = useState(false)
   const [shareInputs, setShareInputs] =
     useState<Record<string, string>>(() =>
       municipality.parties.reduce<Record<string, string>>((accumulator, party) => {
@@ -142,6 +143,26 @@ function App() {
   const nextSeat = election.nextInQueue[0]
   const nextSeatLabel =
     nextSeat == null ? null : splitCandidateLabel(nextSeat.candidateName)
+  const sortedParties = [...municipality.parties].sort((left, right) => {
+    if (!sortPartiesBySize) {
+      return municipality.partyOrder.indexOf(left.id) - municipality.partyOrder.indexOf(right.id)
+    }
+
+    const shareDifference = (voteShares[right.id] ?? 0) - (voteShares[left.id] ?? 0)
+
+    if (shareDifference !== 0) {
+      return shareDifference
+    }
+
+    const seatDifference =
+      (election.seatCounts[right.id] ?? 0) - (election.seatCounts[left.id] ?? 0)
+
+    if (seatDifference !== 0) {
+      return seatDifference
+    }
+
+    return municipality.partyOrder.indexOf(left.id) - municipality.partyOrder.indexOf(right.id)
+  })
 
   const navigateTo = (nextPage: AppPage) => {
     setPage(nextPage)
@@ -221,6 +242,14 @@ function App() {
               Framboðslistar
             </button>
           </nav>
+          <label className="toggle-pill">
+            <input
+              checked={sortPartiesBySize}
+              type="checkbox"
+              onChange={(event) => setSortPartiesBySize(event.currentTarget.checked)}
+            />
+            <span>Raða eftir stærð</span>
+          </label>
           <button className="ghost-button" type="button" onClick={handleReset}>
             Endurstilla á grunnspá
           </button>
@@ -282,7 +311,7 @@ function App() {
             </div>
 
             <div className="party-grid">
-              {municipality.parties.map((party) => {
+              {sortedParties.map((party) => {
                 const seatCount = election.seatCounts[party.id]
                 const nextInParty =
                   election.partyNextIn.find((row) => row.partyId === party.id) ??
@@ -521,7 +550,7 @@ function App() {
           </div>
 
           <div className="candidate-lists-grid">
-            {municipality.parties.map((party) => {
+            {sortedParties.map((party) => {
               const seatsWon = election.seatCounts[party.id]
               const nextInParty =
                 election.partyNextIn.find((row) => row.partyId === party.id) ??

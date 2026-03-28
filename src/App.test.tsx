@@ -48,6 +48,21 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
+  it('can sort parties by current size', () => {
+    const { container } = render(<App />)
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Raða eftir stærð' }))
+
+    const partyCards = [...container.querySelectorAll('[data-testid^="party-card-"]')]
+    const orderedIds = partyCards.map((card) => card.getAttribute('data-testid'))
+
+    expect(orderedIds.slice(0, 3)).toEqual([
+      'party-card-d',
+      'party-card-s',
+      'party-card-m',
+    ])
+  })
+
   it('keeps zero-seat parties visible on the candidate-lists page', () => {
     window.location.hash = '#listar'
     render(<App />)
