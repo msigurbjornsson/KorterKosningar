@@ -191,6 +191,28 @@ function App() {
         </div>
       </section>
 
+      <section className="panel panel--embed">
+        <div className="section-heading">
+          <div>
+            <p className="section-heading__eyebrow">Hlé</p>
+            <h2>Spotify</h2>
+          </div>
+        </div>
+
+        <iframe
+          data-testid="embed-iframe"
+          className="spotify-embed"
+          src="https://open.spotify.com/embed/show/5ucrw8yLMxv2FGM0benN0d?utm_source=generator"
+          width="100%"
+          height="152"
+          frameBorder="0"
+          allowFullScreen
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+          title="Spotify embed"
+        />
+      </section>
+
       <section className="panel">
         <div className="section-heading">
           <div>

@@ -293,6 +293,17 @@
   gap: 1rem;
 }
 
+.panel--embed {
+  justify-items: stretch;
+}
+
+.spotify-embed {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
 .table-panel {
   display: grid;
   gap: 0.85rem;
